@@ -1,6 +1,11 @@
+%% SJ-version v.1.00 (Torr Vision Group)
+% AIM: % To save coco-images with object cats not in PascalVOC (20 cats)
 %% Built on top of the Demo for the CocoApi (see CocoApi.m)
-%% SJ-version v.1.00
-%% Need to filter images containing instances of only unseen categories
+% Place this .m file in the MATLAB-API folder of coco-master
+% Create a folder called 'unseen_category_images' in coco (main) folder
+% Run the following code 
+%%------------------------------------------------------------------------------
+%% Step-1: Need to filter images containing instances of only unseen categories
 %%% Pascal seen categories:
 % Person: person
 % Vehicle: aeroplane, bicycle, boat, bus, car, motorbike, train
@@ -11,7 +16,6 @@
 % Vehicle: airplane, bicycle, boat, bus, car, motorcycle, train, -- truck,
 % Animal: bird, cat, cow, dog, horse, sheep, -- elephant, bear, zebra, giraffe, 
 % PascalIndoor: bottle, chair, dining table, potted plant, couch, tv
-
 % Outdoor: traffic light, fire hydrant, stop sign, parking meter, bench, 
 % Accessory: backpack, umbrella, handbag, tie, suitcase,
 % Sports: frisbee, skis, snowboard, sports ball, kite, baseball bat, baseball glove, skateboard, surfboard, tennis racket, 
@@ -21,10 +25,9 @@
 % Electronic: tv, laptop, mouse, remote, keyboard, cell phone,
 % Appliance: microwave, oven, toaster, sink, refrigerator,
 % Indoor: book, clock, vase, scissors, teddy bear, hair drier, toothbrush, 
-%% Steps in code:
-% filter images with any of the 20 pascal categories
-% all-filtered_images = images with only unseen categories
-% rest is history
+%% Step-2: Filter images with any of the 20 pascal categories
+%% Step-3: All_Images - Filtered_Images = Images with only UNSEEN categories
+%%
 clear;
 close all;
 clc;

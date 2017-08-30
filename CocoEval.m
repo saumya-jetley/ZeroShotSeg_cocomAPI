@@ -92,7 +92,7 @@ classdef CocoEval < handle
       if(nargin<3), iouType='segm'; end
       ev.params.iouThrs = .5:.05:.5;
       ev.params.recThrs = 0:.01:1;
-      if( any(strcmp(iouType,{'bbox','segm'})) )
+      if( any(strcmp(iouType,{'bbox','segm','instance_shape'})) )
         ev.params.areaRng = [0 1e5; 0 32; 32 96; 96 1e5].^2;
         ev.params.maxDets = [1 10 100];
       elseif( strcmp(iouType,'keypoints') )
@@ -128,6 +128,10 @@ classdef CocoEval < handle
           if(~isfield(dt,f)), s=MaskApi.frBbox(cat(1,dt.bbox),h,w);
             for d=1:nDt(i), dt(d).(f)=s(d); end; end
         elseif( strcmp(p.iouType,'bbox') )
+          f='bbox'; if(isempty(dt)), [dt(:).(f)]=deal(); end
+          if(~isfield(dt,f)), s=MaskApi.toBbox([dt.segmentation]);
+            for d=1:nDt(i), dt(d).(f)=s(d,:); end; end
+        elseif( strcmp(p.iouType,'instance_shape') )
           f='bbox'; if(isempty(dt)), [dt(:).(f)]=deal(); end
           if(~isfield(dt,f)), s=MaskApi.toBbox([dt.segmentation]);
             for d=1:nDt(i), dt(d).(f)=s(d,:); end; end
@@ -198,7 +202,7 @@ classdef CocoEval < handle
     function summarize( ev )
       % Compute and display summary metrics for evaluation results.
       if(isempty(ev.eval)), error('Please run accumulate() first'); end
-      if( any(strcmp(ev.params.iouType,{'bbox','segm'})) )
+      if( any(strcmp(ev.params.iouType,{'bbox','segm','instance_shape'})) )
         k=100; M={{1,':','all',k},{1,.50,'all',k}, {1,.75,'all',k},...
           {1,':','small',k}, {1,':','medium',k}, {1,':','large',k},...
           {0,':','all',1}, {0,':','all',10}, {0,':','all',k},...
@@ -368,26 +372,28 @@ classdef CocoEval < handle
       if(D>p.maxDets), D=p.maxDets; dt=dt(1:D); end
       % compute iou between each dt and gt region
       iscrowd = uint8([gt.iscrowd]);
-      t=find(strcmp(p.iouType,{'segm','bbox','keypoints'}));
-%       if(t==1), g=[gt.segmentation]; elseif(t==2), g=cat(1,gt.bbox); end
-%       if(t==1), d=[dt.segmentation]; elseif(t==2), d=cat(1,dt.bbox); end
-%       if(t<=2) 
-%           ious=MaskApi.iou(d,g,iscrowd); 
-%       else
-%         ious=CocoEval.oks(gt,dt); 
-%       end
-        if (t<=2) %sj shape amendment
-%            g={};count=0;
-%            for gt_ind=1:size(gt,2)
-%                if gt(gt_ind).iscrowd == 0
-%                    count=count+1;
-%                    g{count}=gt(gt_ind).segmentation;
-%                end
-%            end
+      t=find(strcmp(p.iouType,{'segm','bbox','keypoints','instance_shape'}));
+      if(t==1), g=[gt.segmentation]; elseif(t==2), g=cat(1,gt.bbox); end
+      if(t==1), d=[dt.segmentation]; elseif(t==2), d=cat(1,dt.bbox); end
+      if(t<=2) 
+          ious=MaskApi.iou(d,g,iscrowd); 
+      elseif(t==3)
+          ious=CocoEval.oks(gt,dt); 
+      end
+      if (t<=2) 
+           g={};count=0;
+           for gt_ind=1:size(gt,2)
+               if gt(gt_ind).iscrowd == 0
+                   count=count+1;
+                   g{count}=gt(gt_ind).segmentation;
+               end
+           end
+       end
+       if (t==4) %sj shape amendment
            g={gt.segmentation}';
            d={dt.bbox}';
            ious = zeros(size(d,1),size(g,1));
-           detpath='/media/sjvision/DATASETDISK/shape_detection/datasets/coco/unseen_ims_pred_0.05/tmp/'; 
+           detpath = params.detpath;
             % get the g and d as images
             for i=1:size(g,1)
                 P=g{i}';G_im = zeros(480,640);
